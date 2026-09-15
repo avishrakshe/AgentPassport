@@ -1,0 +1,27 @@
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+
+# Node
+node_modules/
+dist/
+.next/
+out/
+build/
+.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

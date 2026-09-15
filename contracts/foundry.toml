@@ -13,5 +13,8 @@ remappings = [
 [rpc_endpoints]
 monad_testnet = "${ALCHEMY_MONAD_RPC_URL}"
 
+[etherscan]
+monad_testnet = { key = "${MONADSCAN_API_KEY}", url = "https://testnet.monadscan.com/api", chain = 10143 }
+
 [fuzz]
 runs = 1000

@@ -77,6 +77,8 @@ contract DecayMathFuzzTest is Test {
             uint256 delta = uint256(timeDeltas[i]) % 10 days;
             vm.warp(block.timestamp + delta + 1 days); // ensure cooldown passes
 
+            // casting to uint160 is safe because i < 5 and offset is small
+            // forge-lint: disable-next-line(unsafe-typecast)
             address rater = address(uint160(0x2000 + i));
             vm.prank(rater);
             registry.register(keccak256(abi.encode(rater)), "ipfs://rater");

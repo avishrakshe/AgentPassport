@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useWallet } from "@/components/WalletContext";
 import { createWalletClient, custom } from "viem";
 import {
   Sparkles,
@@ -14,7 +14,7 @@ import {
 import { AGENT_REGISTRY_ADDRESS, AGENT_REGISTRY_ABI, monadTestnet } from "@/lib/contracts";
 
 export default function RegisterPage() {
-  const { primaryWallet, setShowAuthFlow } = useDynamicContext();
+  const { address, walletClient: contextWalletClient, isConnected, connectWallet, switchToMonad, isMonad } = useWallet();
 
   const [agentId, setAgentId] = useState("agent-defi-arbitrage-v1");
   const [name, setName] = useState("DeFi Arbitrage Specialist");
@@ -35,32 +35,33 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      if (!primaryWallet) {
-        setShowAuthFlow(true);
-        throw new Error("Please connect or create an embedded wallet using Dynamic.");
+      if (!isConnected || !address) {
+        await connectWallet();
+        throw new Error("Please connect your wallet using the Connect Wallet button above.");
       }
 
-      let walletClient = (primaryWallet as any)?.getWalletClient
-        ? await (primaryWallet as any).getWalletClient()
-        : null;
+      if (!isMonad) {
+        await switchToMonad();
+      }
 
-      if (!walletClient && typeof window !== "undefined" && (window as any).ethereum) {
-        walletClient = createWalletClient({
+      let activeClient = contextWalletClient;
+      if (!activeClient && typeof window !== "undefined" && (window as any).ethereum) {
+        activeClient = createWalletClient({
           chain: monadTestnet,
           transport: custom((window as any).ethereum),
-          account: primaryWallet.address as `0x${string}`
+          account: address as `0x${string}`
         });
       }
 
-      if (!walletClient) {
-        throw new Error("Wallet client not available. Please connect MetaMask or Dynamic wallet.");
+      if (!activeClient) {
+        throw new Error("Wallet client not available. Please connect MetaMask.");
       }
 
       // Convert agentId to bytes32 format
       const agentIdHex = `0x${Buffer.from(agentId).toString("hex").padEnd(64, "0").slice(0, 64)}` as `0x${string}`;
 
       // Execute on-chain transaction
-      const hash = await (walletClient as any).writeContract({
+      const hash = await (activeClient as any).writeContract({
         address: AGENT_REGISTRY_ADDRESS,
         abi: AGENT_REGISTRY_ABI,
         functionName: "register",
@@ -71,19 +72,17 @@ export default function RegisterPage() {
       setTxHash(hash);
     } catch (err: any) {
       console.error("Registration error:", err);
-      // Fallback demo simulation if testing without gas
-      if (err.message.includes("embedded wallet using Dynamic")) {
+      if (err.message.includes("Please connect your wallet")) {
         setErrorMessage(err.message);
       } else {
-        const demoHash = `0x${Math.random().toString(16).slice(2).padStart(64, "0")}`;
-        setTxHash(demoHash);
+        setErrorMessage(err.message || "Registration failed.");
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentAddress = primaryWallet?.address || "0xYourWalletAddress...1234";
+  const currentAddress = address || "0xYourWalletAddress...1234";
 
   return (
     <div className="min-h-screen bg-zinc-50/50 py-12">
@@ -120,15 +119,15 @@ export default function RegisterPage() {
                     Agent Wallet Address
                   </span>
                   <span className="font-mono text-xs font-bold text-zinc-800">
-                    {primaryWallet?.address || "Not connected"}
+                    {address || "Not connected"}
                   </span>
                 </div>
 
-                {!primaryWallet ? (
+                {!isConnected ? (
                   <button
                     type="button"
-                    onClick={() => setShowAuthFlow(true)}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-xs font-bold transition-all"
+                    onClick={connectWallet}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-bold transition-all"
                   >
                     Connect Wallet
                   </button>

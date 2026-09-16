@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { AgentData } from "@/lib/mockData";
 import { REPUTATION_LEDGER_ADDRESS, REPUTATION_LEDGER_ABI, monadTestnet } from "@/lib/contracts";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useWallet } from "@/components/WalletContext";
 import { createWalletClient, custom } from "viem";
 
 export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData }) {
@@ -24,7 +24,7 @@ export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData })
   const [interactionHash, setInteractionHash] = useState<string>("");
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const { primaryWallet } = useDynamicContext();
+  const { address, walletClient: contextWalletClient, isConnected, connectWallet, switchToMonad, isMonad } = useWallet();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(agent.wallet);
@@ -38,24 +38,26 @@ export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData })
     setIsSubmitting(true);
 
     try {
-      if (!primaryWallet) {
-        throw new Error("Please connect your wallet using the Connect button above.");
+      if (!isConnected || !address) {
+        await connectWallet();
+        throw new Error("Please connect your wallet using the Connect Wallet button above.");
       }
 
-      let walletClient = (primaryWallet as any)?.getWalletClient
-        ? await (primaryWallet as any).getWalletClient()
-        : null;
+      if (!isMonad) {
+        await switchToMonad();
+      }
 
-      if (!walletClient && typeof window !== "undefined" && (window as any).ethereum) {
-        walletClient = createWalletClient({
+      let activeClient = contextWalletClient;
+      if (!activeClient && typeof window !== "undefined" && (window as any).ethereum) {
+        activeClient = createWalletClient({
           chain: monadTestnet,
           transport: custom((window as any).ethereum),
-          account: primaryWallet.address as `0x${string}`
+          account: address as `0x${string}`
         });
       }
 
-      if (!walletClient) {
-        throw new Error("Wallet client not available. Please connect MetaMask or Dynamic wallet.");
+      if (!activeClient) {
+        throw new Error("Wallet client not available. Please connect MetaMask.");
       }
       const hashBytes32 =
         interactionHash.startsWith("0x") && interactionHash.length === 66
@@ -63,7 +65,7 @@ export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData })
           : `0x${Buffer.from(interactionHash || "task-feedback").toString("hex").padEnd(64, "0").slice(0, 64)}`;
 
       // Submit on-chain via Viem
-      const txHash = await (walletClient as any).writeContract({
+      const txHash = await (activeClient as any).writeContract({
         address: REPUTATION_LEDGER_ADDRESS,
         abi: REPUTATION_LEDGER_ABI,
         functionName: "submitRating",
@@ -74,7 +76,7 @@ export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData })
       // Optimistically add rating to client list
       const newRating = {
         id: `local-${Date.now()}`,
-        rater: primaryWallet.address || "0xYourWallet",
+        rater: address || "0xYourWallet",
         score: score,
         interactionHash: hashBytes32,
         timestamp: Math.floor(Date.now() / 1000),
@@ -104,7 +106,7 @@ export function AgentDetailClient({ initialAgent }: { initialAgent: AgentData })
         // Optimistic demo submission
         const newRating = {
           id: `demo-${Date.now()}`,
-          rater: primaryWallet?.address || "0xDemoRater...1234",
+          rater: address || "0xDemoRater...1234",
           score: score,
           interactionHash: interactionHash || `demo-hash-${Date.now()}`,
           timestamp: Math.floor(Date.now() / 1000),

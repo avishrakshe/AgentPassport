@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: agent-passport-indexer
+networks:
+  - id: 10143
+    rpc_config:
+      url: env(ALCHEMY_MONAD_RPC_URL)
+    start_block: 62838000
+    contracts:
+      - name: AgentRegistry
+        address:
+          - env(AGENT_REGISTRY_ADDRESS)
+        handler: src/EventHandlers.ts
+        events:
+          - event: AgentRegistered(address indexed agent, bytes32 agentId)
+          - event: AgentVerified(address indexed agent)
+      - name: ReputationLedger
+        address:
+          - env(REPUTATION_LEDGER_ADDRESS)
+        handler: src/EventHandlers.ts
+        events:
+          - event: RatingSubmitted(address indexed rater, address indexed rated, int8 score)

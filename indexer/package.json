@@ -1,0 +1,18 @@
+{
+  "name": "agent-passport-indexer",
+  "version": "1.0.0",
+  "description": "Envio HyperIndex for Agent Passport on Monad",
+  "scripts": {
+    "codegen": "envio codegen",
+    "build": "tsc",
+    "start": "envio start",
+    "dev": "envio dev"
+  },
+  "dependencies": {
+    "envio": "^2.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.5"
+  }
+}

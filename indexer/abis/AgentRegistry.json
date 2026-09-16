@@ -1,0 +1,323 @@
+[
+    {
+        "type":  "constructor",
+        "inputs":  [
+                       {
+                           "name":  "initialVerifier",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "getAgent",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "outputs":  [
+                        {
+                            "name":  "",
+                            "type":  "tuple",
+                            "internalType":  "struct IAgentRegistry.Agent",
+                            "components":  [
+                                               {
+                                                   "name":  "wallet",
+                                                   "type":  "address",
+                                                   "internalType":  "address"
+                                               },
+                                               {
+                                                   "name":  "agentId",
+                                                   "type":  "bytes32",
+                                                   "internalType":  "bytes32"
+                                               },
+                                               {
+                                                   "name":  "metadataURI",
+                                                   "type":  "string",
+                                                   "internalType":  "string"
+                                               },
+                                               {
+                                                   "name":  "cleanverseVerified",
+                                                   "type":  "bool",
+                                                   "internalType":  "bool"
+                                               },
+                                               {
+                                                   "name":  "registeredAt",
+                                                   "type":  "uint256",
+                                                   "internalType":  "uint256"
+                                               }
+                                           ]
+                        }
+                    ],
+        "stateMutability":  "view"
+    },
+    {
+        "type":  "function",
+        "name":  "isRegistered",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "outputs":  [
+                        {
+                            "name":  "",
+                            "type":  "bool",
+                            "internalType":  "bool"
+                        }
+                    ],
+        "stateMutability":  "view"
+    },
+    {
+        "type":  "function",
+        "name":  "markVerified",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "owner",
+        "inputs":  [
+
+                   ],
+        "outputs":  [
+                        {
+                            "name":  "",
+                            "type":  "address",
+                            "internalType":  "address"
+                        }
+                    ],
+        "stateMutability":  "view"
+    },
+    {
+        "type":  "function",
+        "name":  "register",
+        "inputs":  [
+                       {
+                           "name":  "agentId",
+                           "type":  "bytes32",
+                           "internalType":  "bytes32"
+                       },
+                       {
+                           "name":  "metadataURI",
+                           "type":  "string",
+                           "internalType":  "string"
+                       }
+                   ],
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "renounceOwnership",
+        "inputs":  [
+
+                   ],
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "setVerifier",
+        "inputs":  [
+                       {
+                           "name":  "newVerifier",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "transferOwnership",
+        "inputs":  [
+                       {
+                           "name":  "newOwner",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ],
+        "outputs":  [
+
+                    ],
+        "stateMutability":  "nonpayable"
+    },
+    {
+        "type":  "function",
+        "name":  "verifier",
+        "inputs":  [
+
+                   ],
+        "outputs":  [
+                        {
+                            "name":  "",
+                            "type":  "address",
+                            "internalType":  "address"
+                        }
+                    ],
+        "stateMutability":  "view"
+    },
+    {
+        "type":  "event",
+        "name":  "AgentRegistered",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       },
+                       {
+                           "name":  "agentId",
+                           "type":  "bytes32",
+                           "indexed":  false,
+                           "internalType":  "bytes32"
+                       }
+                   ],
+        "anonymous":  false
+    },
+    {
+        "type":  "event",
+        "name":  "AgentVerified",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       }
+                   ],
+        "anonymous":  false
+    },
+    {
+        "type":  "event",
+        "name":  "OwnershipTransferred",
+        "inputs":  [
+                       {
+                           "name":  "previousOwner",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       },
+                       {
+                           "name":  "newOwner",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       }
+                   ],
+        "anonymous":  false
+    },
+    {
+        "type":  "event",
+        "name":  "VerifierUpdated",
+        "inputs":  [
+                       {
+                           "name":  "oldVerifier",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       },
+                       {
+                           "name":  "newVerifier",
+                           "type":  "address",
+                           "indexed":  true,
+                           "internalType":  "address"
+                       }
+                   ],
+        "anonymous":  false
+    },
+    {
+        "type":  "error",
+        "name":  "AlreadyRegistered",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "EmptyAgentId",
+        "inputs":  [
+
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "NotRegistered",
+        "inputs":  [
+                       {
+                           "name":  "agent",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "NotVerifier",
+        "inputs":  [
+                       {
+                           "name":  "caller",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "OwnableInvalidOwner",
+        "inputs":  [
+                       {
+                           "name":  "owner",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "OwnableUnauthorizedAccount",
+        "inputs":  [
+                       {
+                           "name":  "account",
+                           "type":  "address",
+                           "internalType":  "address"
+                       }
+                   ]
+    },
+    {
+        "type":  "error",
+        "name":  "ZeroAddress",
+        "inputs":  [
+
+                   ]
+    }
+]

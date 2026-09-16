@@ -19,14 +19,23 @@ export const MONAD_NETWORK_PARAMS = {
   blockExplorerUrls: ["https://testnet.monadscan.com"],
 };
 
+export const ORCHESTRATOR_ADDRESS = "0x7991e33e35E87286Aa46056C9B9b3B8CFB40c7";
+
 interface WalletContextType {
   address: string | null;
   chainId: number | null;
   isConnected: boolean;
   isMonad: boolean;
   isConnecting: boolean;
+  isModalOpen: boolean;
+  walletType: "injected" | "orchestrator" | "burner" | null;
   walletClient: WalletClient | null;
-  connectWallet: () => Promise<void>;
+  openModal: () => void;
+  closeModal: () => void;
+  connectWallet: () => void;
+  connectInjected: () => Promise<void>;
+  connectOrchestrator: () => void;
+  connectBurner: () => void;
   disconnectWallet: () => void;
   switchToMonad: () => Promise<void>;
 }
@@ -37,25 +46,38 @@ const WalletContext = createContext<WalletContextType>({
   isConnected: false,
   isMonad: false,
   isConnecting: false,
+  isModalOpen: false,
+  walletType: null,
   walletClient: null,
-  connectWallet: async () => {},
+  openModal: () => {},
+  closeModal: () => {},
+  connectWallet: () => {},
+  connectInjected: async () => {},
+  connectOrchestrator: () => {},
+  connectBurner: () => {},
   disconnectWallet: () => {},
   switchToMonad: async () => {},
 });
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<number | null>(null);
+  const [chainId, setChainId] = useState<number | null>(MONAD_CHAIN_ID);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [walletType, setWalletType] = useState<"injected" | "orchestrator" | "burner" | null>(null);
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
 
   const isMonad = chainId === MONAD_CHAIN_ID;
   const isConnected = !!address;
 
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   // Switch to Monad Testnet by default
   const switchToMonad = async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
-      throw new Error("No Ethereum wallet found. Please install MetaMask.");
+      setChainId(MONAD_CHAIN_ID);
+      return;
     }
     const ethereum = (window as any).ethereum;
 
@@ -64,120 +86,170 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         method: "wallet_switchEthereumChain",
         params: [{ chainId: MONAD_CHAIN_ID_HEX }],
       });
+      setChainId(MONAD_CHAIN_ID);
     } catch (switchError: any) {
-      // Error code 4902 means the chain has not been added to MetaMask
       if (switchError.code === 4902 || switchError.data?.originalError?.code === 4902) {
         await ethereum.request({
           method: "wallet_addEthereumChain",
           params: [MONAD_NETWORK_PARAMS],
         });
+        setChainId(MONAD_CHAIN_ID);
       } else {
         throw switchError;
       }
     }
   };
 
-  // Connect Wallet handler
-  const connectWallet = async () => {
-    if (typeof window === "undefined" || !(window as any).ethereum) {
-      alert("No Ethereum wallet detected! Please install MetaMask or another Web3 wallet.");
-      return;
-    }
-
-    const ethereum = (window as any).ethereum;
+  // Connect Injected (MetaMask, Rabby, etc.)
+  const connectInjected = async () => {
     setIsConnecting(true);
-
     try {
-      // 1. Request accounts
+      if (typeof window === "undefined" || !(window as any).ethereum) {
+        // Fall back to opening install link or modal notice
+        window.open("https://metamask.io/download/", "_blank");
+        throw new Error("MetaMask not detected. Redirecting to MetaMask download...");
+      }
+
+      const ethereum = (window as any).ethereum;
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       if (accounts && accounts.length > 0) {
         const userAddress = accounts[0];
         setAddress(userAddress);
+        setWalletType("injected");
+        localStorage.setItem("ap_wallet_type", "injected");
 
-        // 2. Check and enforce Monad Testnet
-        const currentChainIdHex = await ethereum.request({ method: "eth_chainId" });
-        const currentChainId = parseInt(currentChainIdHex, 16);
-        setChainId(currentChainId);
+        const currentChainHex = await ethereum.request({ method: "eth_chainId" });
+        const currentChain = parseInt(currentChainHex, 16);
+        setChainId(currentChain);
 
-        if (currentChainId !== MONAD_CHAIN_ID) {
+        if (currentChain !== MONAD_CHAIN_ID) {
           try {
             await switchToMonad();
-            setChainId(MONAD_CHAIN_ID);
-          } catch (netErr) {
-            console.warn("Could not auto-switch to Monad Testnet:", netErr);
+          } catch (e) {
+            console.warn("Could not auto-switch to Monad Testnet:", e);
           }
         }
 
-        // 3. Create Viem WalletClient
         const client = createWalletClient({
           chain: monadTestnet,
           transport: custom(ethereum),
           account: userAddress as `0x${string}`,
         });
         setWalletClient(client);
+        closeModal();
       }
     } catch (err: any) {
-      console.error("Wallet connection failed:", err);
+      console.error("Injected connection failed:", err);
+      throw err;
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const disconnectWallet = () => {
-    setAddress(null);
-    setWalletClient(null);
+  // Connect Instant Orchestrator Agent Wallet
+  const connectOrchestrator = () => {
+    setAddress(ORCHESTRATOR_ADDRESS);
+    setChainId(MONAD_CHAIN_ID);
+    setWalletType("orchestrator");
+    localStorage.setItem("ap_wallet_type", "orchestrator");
+    localStorage.setItem("ap_wallet_address", ORCHESTRATOR_ADDRESS);
+    closeModal();
   };
 
-  // Listen to network and account changes
+  // Connect / Generate Burner Agent Wallet
+  const connectBurner = () => {
+    let burner = localStorage.getItem("ap_burner_address");
+    if (!burner) {
+      const rand = Array.from({ length: 40 }, () =>
+        Math.floor(Math.random() * 16).toString(16)
+      ).join("");
+      burner = `0x${rand}`;
+      localStorage.setItem("ap_burner_address", burner);
+    }
+    setAddress(burner);
+    setChainId(MONAD_CHAIN_ID);
+    setWalletType("burner");
+    localStorage.setItem("ap_wallet_type", "burner");
+    closeModal();
+  };
+
+  const disconnectWallet = () => {
+    setAddress(null);
+    setWalletType(null);
+    setWalletClient(null);
+    localStorage.removeItem("ap_wallet_type");
+    localStorage.removeItem("ap_wallet_address");
+  };
+
+  // Auto-reconnect stored session on mount
   useEffect(() => {
-    if (typeof window === "undefined" || !(window as any).ethereum) return;
-    const ethereum = (window as any).ethereum;
+    if (typeof window === "undefined") return;
 
-    // Check if already authorized
-    ethereum
-      .request({ method: "eth_accounts" })
-      .then((accounts: string[]) => {
-        if (accounts && accounts.length > 0) {
-          setAddress(accounts[0]);
-          ethereum.request({ method: "eth_chainId" }).then((chainHex: string) => {
-            const currentChain = parseInt(chainHex, 16);
-            setChainId(currentChain);
-            const client = createWalletClient({
-              chain: monadTestnet,
-              transport: custom(ethereum),
-              account: accounts[0] as `0x${string}`,
-            });
-            setWalletClient(client);
-          });
-        }
-      })
-      .catch(() => {});
-
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        disconnectWallet();
-      } else {
-        setAddress(accounts[0]);
-        const client = createWalletClient({
-          chain: monadTestnet,
-          transport: custom(ethereum),
-          account: accounts[0] as `0x${string}`,
-        });
-        setWalletClient(client);
+    const savedType = localStorage.getItem("ap_wallet_type");
+    if (savedType === "orchestrator") {
+      setAddress(ORCHESTRATOR_ADDRESS);
+      setChainId(MONAD_CHAIN_ID);
+      setWalletType("orchestrator");
+      return;
+    }
+    if (savedType === "burner") {
+      const burner = localStorage.getItem("ap_burner_address");
+      if (burner) {
+        setAddress(burner);
+        setChainId(MONAD_CHAIN_ID);
+        setWalletType("burner");
+        return;
       }
-    };
+    }
 
-    const handleChainChanged = (chainHex: string) => {
-      setChainId(parseInt(chainHex, 16));
-    };
+    if ((window as any).ethereum) {
+      const ethereum = (window as any).ethereum;
+      ethereum
+        .request({ method: "eth_accounts" })
+        .then((accounts: string[]) => {
+          if (accounts && accounts.length > 0) {
+            setAddress(accounts[0]);
+            setWalletType("injected");
+            ethereum.request({ method: "eth_chainId" }).then((chainHex: string) => {
+              setChainId(parseInt(chainHex, 16));
+              const client = createWalletClient({
+                chain: monadTestnet,
+                transport: custom(ethereum),
+                account: accounts[0] as `0x${string}`,
+              });
+              setWalletClient(client);
+            });
+          }
+        })
+        .catch(() => {});
 
-    ethereum.on?.("accountsChanged", handleAccountsChanged);
-    ethereum.on?.("chainChanged", handleChainChanged);
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length === 0) {
+          disconnectWallet();
+        } else {
+          setAddress(accounts[0]);
+          setWalletType("injected");
+          const client = createWalletClient({
+            chain: monadTestnet,
+            transport: custom(ethereum),
+            account: accounts[0] as `0x${string}`,
+          });
+          setWalletClient(client);
+        }
+      };
 
-    return () => {
-      ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
-      ethereum.removeListener?.("chainChanged", handleChainChanged);
-    };
+      const handleChainChanged = (chainHex: string) => {
+        setChainId(parseInt(chainHex, 16));
+      };
+
+      ethereum.on?.("accountsChanged", handleAccountsChanged);
+      ethereum.on?.("chainChanged", handleChainChanged);
+
+      return () => {
+        ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
+        ethereum.removeListener?.("chainChanged", handleChainChanged);
+      };
+    }
   }, []);
 
   return (
@@ -188,8 +260,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         isConnected,
         isMonad,
         isConnecting,
+        isModalOpen,
+        walletType,
         walletClient,
-        connectWallet,
+        openModal,
+        closeModal,
+        connectWallet: openModal,
+        connectInjected,
+        connectOrchestrator,
+        connectBurner,
         disconnectWallet,
         switchToMonad,
       }}

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { DynamicProviderWrapper } from "@/components/DynamicProvider";
 import { WalletProvider } from "@/components/WalletContext";
+import { ConnectModal } from "@/components/ConnectModal";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,6 +40,7 @@ export default function RootLayout({
         <DynamicProviderWrapper>
           <WalletProvider>
             <Navbar />
+            <ConnectModal />
             {children}
           </WalletProvider>
         </DynamicProviderWrapper>

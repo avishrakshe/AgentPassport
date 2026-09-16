@@ -2,11 +2,20 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ExternalLink, Wallet, LogOut, AlertTriangle, Check, Copy } from "lucide-react";
+import { Sparkles, ExternalLink, Wallet, LogOut, AlertTriangle, Check, Copy, BarChart3 } from "lucide-react";
 import { useWallet } from "./WalletContext";
 
 export function Navbar() {
-  const { address, isConnected, isMonad, isConnecting, connectWallet, disconnectWallet, switchToMonad } = useWallet();
+  const {
+    address,
+    isConnected,
+    isMonad,
+    isConnecting,
+    openModal,
+    disconnectWallet,
+    switchToMonad,
+    walletType
+  } = useWallet();
   const [copied, setCopied] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -46,6 +55,11 @@ export function Navbar() {
             <Link href="/#registry" className="hover:text-black transition-colors">
               Registry
             </Link>
+            <Link href="/analysis" className="hover:text-black transition-colors flex items-center gap-1.5 font-bold text-zinc-800">
+              <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
+              Live Analysis
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            </Link>
             <Link href="/register" className="hover:text-black transition-colors flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-purple-600" />
               Register Agent
@@ -76,7 +90,7 @@ export function Navbar() {
           {/* Connection Status Label matching screenshot */}
           <div className="hidden sm:flex flex-col text-right text-xs leading-tight">
             <span className="font-semibold text-zinc-800">
-              {isConnected ? "Mode B Active" : "Not connected"}
+              {isConnected ? (walletType === "orchestrator" ? "Orchestrator Mode" : "Mode B Active") : "Not connected"}
             </span>
             <span className="text-[11px] text-zinc-400">
               {isConnected ? (isMonad ? "Monad Testnet" : "Wrong Network") : "Connect for Mode B"}
@@ -86,12 +100,12 @@ export function Navbar() {
           {/* Connect / Network Button */}
           {!isConnected ? (
             <button
-              onClick={connectWallet}
+              onClick={openModal}
               disabled={isConnecting}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs tracking-wide shadow-sm hover:shadow transition-all inline-flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs tracking-wide shadow-sm hover:shadow transition-all inline-flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
             >
               <Wallet className="w-3.5 h-3.5" />
-              {isConnecting ? "Connecting..." : "Connect Wallet"}
+              {isConnecting ? "Connecting..." : "Connect / Log In"}
             </button>
           ) : !isMonad ? (
             <button

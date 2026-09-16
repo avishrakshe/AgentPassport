@@ -1,0 +1,33 @@
+{
+  "name": "@agent-passport/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for Agent Passport reputation and identity on Monad",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx test/sdk.test.ts"
+  },
+  "keywords": [
+    "monad",
+    "ai-agents",
+    "reputation",
+    "identity",
+    "trust-score",
+    "viem"
+  ],
+  "author": "Agent Passport Team",
+  "license": "MIT",
+  "dependencies": {
+    "graphql": "^16.8.1",
+    "graphql-request": "^7.0.1",
+    "viem": "^2.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.10.0",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@agent-passport/plugin",
+  "version": "1.0.0",
+  "description": "MetaMask Agent Wallet Plugin / Snap for Agent Passport Reputation Checks on Monad",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx test/plugin.test.ts",
+    "demo": "tsx test/demo.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@metamask/snaps-sdk": "^6.2.1",
+    "viem": "^2.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.10.0",
+    "typescript": "^5.4.5"
+  }
+}

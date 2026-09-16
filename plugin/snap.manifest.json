@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "description": "Agent Passport Reputation Guard: Inspects counterparty AI agent trust scores and Cleanverse verification before approving transactions on Monad.",
+  "proposedName": "Agent Passport Guard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avishrakshe/AgentPassport.git"
+  },
+  "source": {
+    "shasum": "",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "packageName": "@agent-passport/plugin",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "endowment:transaction-insight": {},
+    "endowment:rpc": {
+      "dapps": true,
+      "snaps": false
+    },
+    "endowment:network-access": {},
+    "snap_dialog": {},
+    "snap_manageState": {}
+  },
+  "manifestVersion": "0.1"
+}

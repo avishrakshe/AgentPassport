@@ -10,27 +10,33 @@
   --muted: #71717a;
 }
 
+html {
+  scroll-behavior: auto !important;
+}
+
 body {
   color: var(--foreground);
   background-color: var(--background);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeSpeed;
 }
 
-/* Custom subtle grid background */
+/* Subtle background pattern - optimized with fixed attachment and hardware acceleration */
 .bg-grid-pattern {
-  background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-color: #fafafa;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
-/* Card hover animation */
+/* Card hover animation - hardware accelerated with containment */
 .agent-card {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  contain: content;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  will-change: transform;
 }
 
 .agent-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.06);
 }
